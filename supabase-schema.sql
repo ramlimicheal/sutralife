@@ -158,3 +158,13 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- Atomic view count increment
+CREATE OR REPLACE FUNCTION public.increment_view_count(character_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.characters
+  SET view_count = view_count + 1
+  WHERE id = character_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

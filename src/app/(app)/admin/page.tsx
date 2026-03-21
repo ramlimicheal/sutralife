@@ -126,7 +126,7 @@ export default function AdminDashboard() {
             <span className="font-label text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Premium Tier</span>
           </div>
           <p className="text-2xl font-extrabold text-text-primary">{stats.premiumCount.toLocaleString()}</p>
-          <p className="text-text-tertiary text-[11px] mt-1">{Math.round((stats.premiumCount / stats.activeSubscribers) * 100)}% of total</p>
+          <p className="text-text-tertiary text-[11px] mt-1">{stats.activeSubscribers > 0 ? Math.round((stats.premiumCount / stats.activeSubscribers) * 100) : 0}% of total</p>
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-5">

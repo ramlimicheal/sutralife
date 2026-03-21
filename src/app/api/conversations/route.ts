@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       .from("conversations")
       .select("*, characters(name, avatar_url)")
       .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
+      .order("last_message_at", { ascending: false });
 
     if (characterId) {
       query = query.eq("character_id", characterId);
@@ -77,7 +77,6 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         character_id: body.characterId,
-        title: body.title ?? "New Conversation",
       })
       .select()
       .single();

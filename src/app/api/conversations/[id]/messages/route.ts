@@ -100,7 +100,7 @@ export async function POST(
     // Update conversation timestamp
     await supabase
       .from("conversations")
-      .update({ updated_at: new Date().toISOString() })
+      .update({ last_message_at: new Date().toISOString() })
       .eq("id", id);
 
     return NextResponse.json({ message }, { status: 201 });

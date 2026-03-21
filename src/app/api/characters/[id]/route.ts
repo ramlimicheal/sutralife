@@ -30,11 +30,8 @@ export async function GET(
         .single();
 
       if (character) {
-        // Increment view count
-        await supabase
-          .from("characters")
-          .update({ view_count: (character.view_count ?? 0) + 1 })
-          .eq("id", id);
+        // Atomic view count increment via RPC
+        await supabase.rpc("increment_view_count", { character_id: id });
 
         return NextResponse.json({ character });
       }
