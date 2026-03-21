@@ -234,7 +234,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              <button onClick={handleSaveProfile} disabled={saving} className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50">
+              <button onClick={handleSaveProfile} disabled={saving} className="px-6 py-2.5 cta-gradient text-bg font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50">
                 {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-accent-light font-bold text-[16px] capitalize">{tierLabel}</span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold text-white ${profile?.subscription_status === "active" ? "cta-gradient" : "bg-coral"}`}>
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${profile?.subscription_status === "active" ? "cta-gradient text-bg" : "bg-coral text-white"}`}>
                         {(profile?.subscription_status ?? "inactive").toUpperCase()}
                       </span>
                     </div>
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                   <p className="text-accent-light font-bold text-2xl">{tierPrice}<span className="text-text-tertiary text-[12px] font-normal">/mo</span></p>
                 </div>
                 <div className="flex gap-3 mt-4">
-                  <Link href="/pricing" className="px-4 py-2 cta-gradient text-white font-semibold text-[12px] rounded-lg hover:opacity-90 transition-opacity">
+                  <Link href="/pricing" className="px-4 py-2 cta-gradient text-bg font-semibold text-[12px] rounded-lg hover:opacity-90 transition-opacity">
                     Upgrade Plan
                   </Link>
                   {profile?.subscription_status === "active" && (

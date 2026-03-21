@@ -122,7 +122,7 @@ export default function LibraryPage() {
           </p>
           <a
             href={activeTab === "created" ? "/create" : "/discover"}
-            className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity"
+            className="px-6 py-2.5 cta-gradient text-bg font-semibold text-[13px] rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
             <span className="material-symbols-outlined text-[16px]">
               {activeTab === "created" ? "add" : "explore"}

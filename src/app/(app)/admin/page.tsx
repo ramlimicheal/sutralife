@@ -84,7 +84,7 @@ export default function AdminDashboard() {
           <button className="px-4 py-2 bg-surface-highest border border-border rounded-lg text-[12px] text-text-secondary font-medium hover:text-text-primary transition-colors flex items-center gap-2">
             <span className="material-symbols-outlined text-[14px]">download</span>Export CSV
           </button>
-          <button className="px-4 py-2 cta-gradient text-white font-semibold text-[12px] rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
+          <button className="px-4 py-2 cta-gradient text-bg font-semibold text-[12px] rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
             <span className="material-symbols-outlined text-[14px]">add</span>Add User
           </button>
         </div>

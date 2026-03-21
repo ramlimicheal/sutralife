@@ -89,7 +89,7 @@ export default function PricingPage() {
               }`}
             >
               {isPopular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 cta-gradient rounded-full text-[10px] font-bold text-white tracking-wider uppercase">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 cta-gradient rounded-full text-[10px] font-bold text-bg tracking-wider uppercase">
                   Most Popular
                 </div>
               )}
@@ -119,7 +119,7 @@ export default function PricingPage() {
                 disabled={subscribing === tier.name}
                 className={`w-full py-3 rounded-xl font-semibold text-[13px] transition-all disabled:opacity-50 ${
                   isPopular
-                    ? "cta-gradient text-white hover:opacity-90 shadow-lg shadow-accent/15"
+                    ? "cta-gradient text-bg hover:opacity-90 shadow-lg shadow-accent/15"
                     : "bg-surface-highest border border-border text-text-primary hover:bg-surface-high"
                 }`}
               >

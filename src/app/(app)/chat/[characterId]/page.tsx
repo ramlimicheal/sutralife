@@ -301,7 +301,7 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent-dim transition-colors disabled:opacity-30"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-accent text-bg hover:bg-accent-dim transition-colors disabled:opacity-30"
               >
                 <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
               </button>

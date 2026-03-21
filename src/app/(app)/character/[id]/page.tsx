@@ -38,7 +38,7 @@ export default function CharacterProfile({ params }: { params: Promise<{ id: str
             <div className="flex gap-3">
               <Link
                 href={`/chat/${character.id}`}
-                className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg flex items-center gap-2 hover:opacity-90 active:scale-[0.97] transition-all shadow-lg shadow-accent/15"
+                className="px-6 py-2.5 cta-gradient text-bg font-semibold text-[13px] rounded-lg flex items-center gap-2 hover:opacity-90 active:scale-[0.97] transition-all shadow-lg shadow-accent/15"
               >
                 Start Chatting <span className="material-symbols-outlined text-[16px]">chat</span>
               </Link>
@@ -157,7 +157,7 @@ export default function CharacterProfile({ params }: { params: Promise<{ id: str
                 </p>
                 <Link
                   href="/pricing"
-                  className="w-full py-2.5 rounded-lg cta-gradient text-white font-semibold text-[13px] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
+                  className="w-full py-2.5 rounded-lg cta-gradient text-bg font-semibold text-[13px] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
                 >
                   Upgrade Now
                 </Link>

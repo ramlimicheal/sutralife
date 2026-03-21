@@ -88,7 +88,7 @@ export async function openRazorpayCheckout(options: {
       email: options.userEmail,
     },
     theme: {
-      color: "#9547f7",
+      color: "#A8A8B8",
     },
     handler: (response: RazorpayPaymentResult) => {
       options.onSuccess(response);

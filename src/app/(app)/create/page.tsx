@@ -123,7 +123,7 @@ export default function CreateCharacterPage() {
         {[1, 2, 3, 4, 5].map((s) => (
           <div key={s} className="flex items-center gap-2 flex-1">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold transition-colors ${
-              s <= step ? "cta-gradient text-white" : "bg-surface-highest text-text-tertiary border border-border"
+              s <= step ? "cta-gradient text-bg" : "bg-surface-highest text-text-tertiary border border-border"
             }`}>
               {s < step ? (
                 <span className="material-symbols-outlined text-[14px]">check</span>
@@ -352,7 +352,7 @@ export default function CreateCharacterPage() {
           <button
             onClick={() => setStep(step + 1)}
             disabled={!canProceed()}
-            className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-30"
+            className="px-6 py-2.5 cta-gradient text-bg font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-30"
           >
             Continue
           </button>
@@ -360,7 +360,7 @@ export default function CreateCharacterPage() {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-30"
+            className="px-6 py-2.5 cta-gradient text-bg font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-30"
           >
             <span className="material-symbols-outlined text-[16px]">publish</span>
             Publish Character

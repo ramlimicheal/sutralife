@@ -120,7 +120,7 @@ export default function DiscoverPage() {
             <div className="flex gap-3">
               <Link
                 href={`/chat/${heroCharacter.id}`}
-                className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg flex items-center gap-2 hover:opacity-90 active:scale-[0.97] transition-all shadow-lg shadow-accent/15"
+                className="px-6 py-2.5 cta-gradient text-bg font-semibold text-[13px] rounded-lg flex items-center gap-2 hover:opacity-90 active:scale-[0.97] transition-all shadow-lg shadow-accent/15"
               >
                 Start Chatting <span className="material-symbols-outlined text-[16px]">chat</span>
               </Link>

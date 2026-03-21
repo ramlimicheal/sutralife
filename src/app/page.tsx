@@ -63,7 +63,7 @@ export default function AgeGate() {
           <button
             onClick={handleEnter}
             disabled={!confirmed}
-            className="w-full py-3 rounded-xl cta-gradient text-white font-bold text-[14px] shadow-lg shadow-accent/15 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100"
+            className="w-full py-3 rounded-xl cta-gradient text-bg font-bold text-[14px] shadow-lg shadow-accent/15 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             Enter Sanctuary
           </button>

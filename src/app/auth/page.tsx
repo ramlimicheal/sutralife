@@ -213,7 +213,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl cta-gradient text-white font-bold text-[14px] shadow-lg shadow-accent/15 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full py-3 rounded-xl cta-gradient text-bg font-bold text-[14px] shadow-lg shadow-accent/15 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {loading ? "Please wait..." : mode === "login" ? "Log In" : "Create Account"}
             </button>

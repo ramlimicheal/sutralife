@@ -37,7 +37,7 @@ export default function CharacterCard({ character, nsfwEnabled = false }: Charac
               </span>
             )}
             {character.is_premium && (
-              <span className="px-2 py-0.5 rounded-md bg-accent/80 backdrop-blur-md text-[10px] font-label font-bold text-white">
+              <span className="px-2 py-0.5 rounded-md bg-accent/80 backdrop-blur-md text-[10px] font-label font-bold text-bg">
                 PRO
               </span>
             )}
