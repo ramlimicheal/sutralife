@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     // Check if already favorited
     const { data: existing } = await supabase
       .from("favorites")
-      .select("id")
+      .select("user_id")
       .eq("user_id", user.id)
       .eq("character_id", characterId)
       .single();
@@ -77,7 +77,8 @@ export async function POST(request: Request) {
       await supabase
         .from("favorites")
         .delete()
-        .eq("id", existing.id);
+        .eq("user_id", user.id)
+        .eq("character_id", characterId);
 
       return NextResponse.json({ favorited: false });
     }

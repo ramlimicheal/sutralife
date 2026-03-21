@@ -58,8 +58,9 @@ export async function POST(request: Request) {
         };
 
         const tier = tierMap[planId] ?? "basic";
+        const period = payment.notes?.period ?? "monthly";
         const expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
+        expiresAt.setMonth(expiresAt.getMonth() + (period === "yearly" ? 12 : 1));
 
         await supabase
           .from("profiles")

@@ -205,9 +205,11 @@ export async function POST(request: Request) {
           // Fire-and-forget: extract memories from this exchange
           extractMemories(charName, message, responseText, existingMemoryContents)
             .then(async (newMemories) => {
-              if (newMemories.length > 0 && supabaseUrl && supabaseAnonKey) {
+              if (newMemories.length > 0 && supabaseUrl) {
+                const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+                if (!serviceKey) return;
                 const { createClient } = await import("@supabase/supabase-js");
-                const adminSupabase = createClient(supabaseUrl, supabaseAnonKey);
+                const adminSupabase = createClient(supabaseUrl, serviceKey);
                 const rows = newMemories.map((m) => ({
                   user_id: userId,
                   character_id: charId,
@@ -229,8 +231,10 @@ export async function POST(request: Request) {
             )
               .then(async (phantomContent) => {
                 if (phantomContent) {
+                  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+                  if (!serviceKey) return;
                   const { createClient } = await import("@supabase/supabase-js");
-                  const adminSupabase = createClient(supabaseUrl, supabaseAnonKey);
+                  const adminSupabase = createClient(supabaseUrl, serviceKey);
                   await adminSupabase.from("phantom_messages").insert({
                     user_id: userId,
                     character_id: charId,
