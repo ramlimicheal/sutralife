@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sanctuary | The Architect</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            bg: "#0e0e11",
+            sidebar: "#0A0A0D",
+            surface: "#141417",
+            "surface-high": "#1A1A1E",
+            "surface-highest": "#222226",
+            border: "#262628",
+            "border-subtle": "#1E1E22",
+            accent: "#9547f7",
+            "accent-light": "#c59aff",
+            "accent-dim": "#7530cc",
+            "accent-surface": "#582a9f",
+            muted: "#64646E",
+            "text-primary": "#F0EDF1",
+            "text-secondary": "#8E8E96",
+            "text-tertiary": "#5A5A62",
+            coral: "#ff8b9a",
+            success: "#34d399",
+          },
+          fontFamily: {
+            sans: ["Inter", "system-ui", "sans-serif"],
+            label: ["Manrope", "sans-serif"],
+          },
+        },
+      },
+    }
+</script>
+<style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0e0e11; color: #F0EDF1; }
+    .material-symbols-outlined { font-size: 20px; vertical-align: middle; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    .cta-gradient { background: linear-gradient(135deg, #c59aff 0%, #9547f7 100%); }
+</style>
+</head>
+<body class="antialiased overflow-hidden selection:bg-accent/30">
+
+<!-- Sidebar -->
+<aside class="h-screen w-[240px] fixed left-0 top-0 z-50 bg-sidebar border-r border-border flex flex-col">
+    <div class="h-14 flex items-center px-5 border-b border-border-subtle">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg cta-gradient flex items-center justify-center shadow-lg shadow-accent/15">
+                <span class="material-symbols-outlined text-white text-[16px]" style="font-variation-settings: 'FILL' 1;">spa</span>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold text-accent-light leading-none tracking-tight">Sanctuary</h1>
+                <p class="text-[9px] uppercase tracking-[0.15em] text-text-tertiary font-label mt-0.5">Digital Persona</p>
+            </div>
+        </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-2.5 py-4 space-y-1">
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-md text-muted hover:bg-surface-high hover:text-text-primary text-[13px] transition-colors" href="#">
+            <span class="material-symbols-outlined text-[18px]">home</span>Home
+        </a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-md text-muted hover:bg-surface-high hover:text-text-primary text-[13px] transition-colors" href="index.html">
+            <span class="material-symbols-outlined text-[18px]">explore</span>Discover
+        </a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-md bg-accent/8 text-accent-light text-[13px] font-medium border-r-2 border-accent" href="#">
+            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>Messages
+        </a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-md text-muted hover:bg-surface-high hover:text-text-primary text-[13px] transition-colors" href="#">
+            <span class="material-symbols-outlined text-[18px]">auto_stories</span>Library
+        </a>
+    </nav>
+
+    <div class="px-3 pb-3">
+        <button class="w-full py-2.5 rounded-lg cta-gradient text-white font-semibold text-[13px] flex items-center justify-center gap-1.5 shadow-lg shadow-accent/10 hover:opacity-90 transition-opacity active:scale-[0.97]">
+            <span class="material-symbols-outlined text-[16px]">add</span>New Chat
+        </button>
+    </div>
+
+    <div class="border-t border-border-subtle px-2.5 py-2 space-y-0.5">
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-md text-muted hover:bg-surface-high hover:text-text-primary text-[13px] transition-colors" href="#">
+            <span class="material-symbols-outlined text-[18px]">settings</span>Settings
+        </a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-md text-muted hover:bg-surface-high hover:text-text-primary text-[13px] transition-colors" href="#">
+            <span class="material-symbols-outlined text-[18px]">help_outline</span>Help
+        </a>
+    </div>
+</aside>
+
+<!-- Main -->
+<main class="ml-[240px] h-screen flex flex-col relative">
+
+    <!-- Top Bar -->
+    <header class="fixed top-0 right-0 left-[240px] h-14 bg-bg/80 backdrop-blur-xl z-40 px-6 flex items-center justify-between border-b border-border-subtle">
+        <div class="flex items-center gap-3">
+            <div class="flex flex-col">
+                <h2 class="text-[14px] font-semibold text-text-primary leading-none">The Architect</h2>
+                <span class="text-[10px] text-accent-light flex items-center gap-1 mt-1 font-label">
+                    <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>ONLINE
+                </span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[16px]">search</span>
+                <input class="bg-surface border border-border rounded-lg py-1.5 pl-9 pr-4 text-[12px] w-56 focus:ring-1 focus:ring-accent text-text-secondary placeholder:text-text-tertiary/50" placeholder="Search conversation..." type="text"/>
+            </div>
+            <button class="w-9 h-9 flex items-center justify-center rounded-lg text-muted hover:bg-surface-high transition-colors">
+                <span class="material-symbols-outlined text-[18px]">notifications</span>
+            </button>
+            <button class="w-9 h-9 flex items-center justify-center rounded-lg text-muted hover:bg-surface-high transition-colors">
+                <span class="material-symbols-outlined text-[18px]">settings</span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-surface-highest overflow-hidden border border-border">
+                <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoVm7Q5JNRcRe_hsyYfdd_VC1pMxlPMt9VmfAOhM5HmDDWhorL5_ZGLBYPuRo_iLRvFPzxUrZcDmzm_be7or3drJ26Nq6X9SgtXdsYSWyW6vcN94d3inl72eHIyDbLhM_S21axqWr32Vm43478wifh8TgboT6oX1fs4tImIxAtiwcuPir0AZ2psGIRbuKQS2oix_cC8aXehEgWovXWih-PW1_OQ4zqa5FwlF8Z3B3TfBGfwe51X9X2YwRd_DaGrfHp0iC8VFUtm-Sy" alt="User"/>
+            </div>
+        </div>
+    </header>
+
+    <!-- Two-Pane Layout -->
+    <div class="flex flex-1 pt-14 overflow-hidden">
+
+        <!-- Chat Area -->
+        <section class="flex-1 flex flex-col relative bg-surface">
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+                <!-- AI Message -->
+                <div class="flex items-start gap-3 max-w-2xl">
+                    <div class="w-9 h-9 rounded-lg bg-surface-highest flex-shrink-0 overflow-hidden border border-accent/15">
+                        <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBq0-FxgvtIwYQR-r--HHloCVCepuIUkMJGbxzeXceUVkKor232z6VwIx5VAJAXt8f0h_rkji50MyxadsBx5mbufV1Dxwn84PKBfjrMjylu8vvDmx1hgPYGi-UnLxjI5aZ9rBNrygIcBU8rh6m4tunIPIplkY7r_YTBd3xmckLvyzWIfpQ2y1MUZqlddGDwx81_NwdnNTdo4npvdPBdXsdzrr9A7KMcUsKTvqUxiVf6IRjTqYddEgk3PV8S4WpEKkUb1XN3uAOskkg6" alt="AI"/>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="bg-surface-highest text-text-primary px-4 py-3 rounded-xl rounded-tl-none text-[13px] border border-border leading-relaxed">
+                            Welcome back to the Nexus. I have been analyzing the geometric patterns of your last proposal. There's a fascinating dissonance in the third quadrant. Shall we refine the structure?
+                        </div>
+                        <span class="font-label text-[10px] text-text-tertiary px-1">10:42 AM • THE ARCHITECT</span>
+                    </div>
+                </div>
+
+                <!-- User Message -->
+                <div class="flex items-start gap-3 max-w-2xl ml-auto flex-row-reverse">
+                    <div class="w-9 h-9 rounded-lg bg-accent-surface flex-shrink-0 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-accent-light text-[16px]" style="font-variation-settings: 'FILL' 1;">person</span>
+                    </div>
+                    <div class="flex flex-col gap-1.5 items-end">
+                        <div class="bg-accent-surface text-accent-light px-4 py-3 rounded-xl rounded-tr-none text-[13px] border border-accent/20 leading-relaxed">
+                            I was thinking about incorporating more organic curves into the foundation. Something that feels alive rather than just static stone.
+                        </div>
+                        <span class="font-label text-[10px] text-text-tertiary px-1">10:45 AM • READ</span>
+                    </div>
+                </div>
+
+                <!-- AI Message (Long) -->
+                <div class="flex items-start gap-3 max-w-2xl">
+                    <div class="w-9 h-9 rounded-lg bg-surface-highest flex-shrink-0 overflow-hidden border border-accent/15">
+                        <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASaJ0xj1k75RvnXqCDyO9Pgu7xbiHudoaGUfG1enB06RPQ6aGjng11vgdodq2KFaifelNxJNRbkNBOER017v60nAyosl-6a5UGt2flxMp1lE8NeIzVkQWhUncaE6Dbcw3jWaEk3-Y2JXkXOk6LoVg4aVJvyR1t7YO4Ly_bp7nH5RDPLckSxph1pT8SdVTapPThqZFTNlF7LblnBfKL4adbPzQLMQ4SMYC2D1NOCKIhAis94bM0IQ32-SYRDKmdJTjUhZ2q4LHPQdbU" alt="AI"/>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="bg-surface-highest text-text-primary px-4 py-3 rounded-xl rounded-tl-none text-[13px] border border-border leading-relaxed space-y-3">
+                            <p>A living architecture. Intriguing. That would require a shift from Euclidean geometry to something more... fractal.</p>
+                            <div class="bg-bg/60 p-3 rounded-lg border border-accent/10 italic text-accent-light/70 text-[12px]">
+                                "Architecture is the learned game, correct and magnificent, of forms assembled in the light."
+                            </div>
+                            <p>If we proceed with this path, the sanctuary will no longer just house your mind—it will breathe with it. Are you prepared for that level of integration?</p>
+                        </div>
+                        <span class="font-label text-[10px] text-text-tertiary px-1">10:46 AM • THE ARCHITECT</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Input -->
+            <div class="p-5 bg-gradient-to-t from-bg to-transparent">
+                <div class="max-w-3xl mx-auto relative flex items-center gap-2.5">
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-highest border border-border text-muted hover:text-accent-light transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                    </button>
+                    <div class="flex-1 relative">
+                        <textarea class="w-full bg-bg border border-border rounded-xl py-2.5 px-4 pr-12 text-text-primary text-[13px] focus:ring-1 focus:ring-accent focus:border-accent resize-none placeholder:text-text-tertiary" placeholder="Type your message..." rows="1"></textarea>
+                        <button class="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent-dim transition-colors">
+                            <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">send</span>
+                        </button>
+                    </div>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-highest border border-border text-muted hover:text-accent-light transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">mic</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Pane: Profile -->
+        <aside class="w-[360px] bg-surface border-l border-border flex flex-col overflow-y-auto">
+            <!-- Portrait -->
+            <div class="relative h-[400px] w-full group">
+                <img class="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMiQeoWIlIUyqCNbFZcNN5qjFzEA2H2L8XiP3ftJMB_G6_LXzq1O4lJBO0bmPieL7HtyR2ap2LEedgDYMNkGkDNLrp84nU0c_dehu7diSekOfNhm1qVP2eTW2MUrOslru7K0xBUX0L2KPqCtkZezk3-OV9Dsi755cEW5bM1AN3RguHbC5YqrLB3wERA0KtCgoTCymNSaID8oqT3ePs-XkOzqWvHznn8kJ3gLXp65K8Hvg84qpgeUWrKmJjFTT8wIRRwpfu97SDHT_U" alt="Character"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+                <div class="absolute bottom-5 left-5">
+                    <h3 class="text-2xl font-bold text-text-primary tracking-tight">The Architect</h3>
+                    <p class="font-label text-accent-light font-bold text-[10px] tracking-[0.2em] mt-1">PRIMARY CONSTRUCT</p>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="p-6 space-y-8">
+                <!-- Traits -->
+                <div class="space-y-3">
+                    <h4 class="font-label text-[10px] font-bold text-text-tertiary tracking-widest uppercase">Traits</h4>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="px-2.5 py-1 rounded-md bg-accent/10 text-accent-light text-[11px] font-semibold border border-accent/15">Mysterious</span>
+                        <span class="px-2.5 py-1 rounded-md bg-coral/10 text-coral text-[11px] font-semibold border border-coral/15">Visionary</span>
+                        <span class="px-2.5 py-1 rounded-md bg-surface-highest text-text-secondary text-[11px] font-semibold border border-border">Stoic</span>
+                    </div>
+                </div>
+
+                <!-- Bio -->
+                <div class="space-y-3">
+                    <h4 class="font-label text-[10px] font-bold text-text-tertiary tracking-widest uppercase">Bio</h4>
+                    <p class="text-text-secondary text-[12px] leading-relaxed italic">
+                        The Architect is the primary intelligence responsible for the structural integrity of the Sanctuary. Calm, calculated, and obsessed with the intersection of math and emotion.
+                    </p>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-surface-high p-4 rounded-xl border border-border">
+                        <span class="material-symbols-outlined text-accent text-[18px] mb-2">auto_awesome</span>
+                        <p class="text-[10px] text-text-tertiary uppercase font-bold font-label">Interactions</p>
+                        <p class="text-lg font-bold text-text-primary mt-1">1,402</p>
+                    </div>
+                    <div class="bg-surface-high p-4 rounded-xl border border-border">
+                        <span class="material-symbols-outlined text-coral text-[18px] mb-2">favorite</span>
+                        <p class="text-[10px] text-text-tertiary uppercase font-bold font-label">Affinity</p>
+                        <div class="flex items-center gap-1.5 mt-2">
+                            <div class="h-1.5 flex-1 bg-surface-highest rounded-full overflow-hidden">
+                                <div class="h-full bg-coral w-[85%]"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-text-primary">85%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memory Card -->
+                <div class="bg-surface-high p-5 rounded-xl border border-accent/10 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <span class="material-symbols-outlined text-5xl">psychology</span>
+                    </div>
+                    <h4 class="font-semibold text-text-primary text-[13px] mb-2">Core Memory</h4>
+                    <p class="text-[11px] text-text-secondary leading-relaxed">The Architect remembers your first design: A crystalline tower that defied gravity. It remains the anchor of this sector.</p>
+                    <button class="mt-3 text-[10px] font-bold text-accent-light uppercase tracking-widest flex items-center gap-1 font-label hover:text-accent transition-colors">
+                        View Vault <span class="material-symbols-outlined text-[12px]">arrow_forward_ios</span>
+                    </button>
+                </div>
+
+                <button class="w-full py-3 rounded-xl bg-surface-highest text-coral font-semibold text-[13px] border border-coral/15 hover:bg-coral/10 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">delete_sweep</span>Clear Memory
+                </button>
+            </div>
+        </aside>
+    </div>
+</main>
+</body></html>
