@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CharacterCard from "@/components/CharacterCard";
 import { mockCharacters, heroCharacter } from "@/lib/mock-data";
+import type { Character } from "@/types";
 
 const categories = ["All Personas", "Cyberpunk", "Historical", "Fantasy", "Slice of Life", "Supernatural"];
 const traits = ["Romantic", "Mysterious", "Aggressive", "Cheerful", "Loyal"];
@@ -12,22 +13,86 @@ const traits = ["Romantic", "Mysterious", "Aggressive", "Cheerful", "Loyal"];
 export default function DiscoverPage() {
   const [activeCategory, setActiveCategory] = useState("All Personas");
   const [activeTraits, setActiveTraits] = useState<string[]>([]);
+  const [characters, setCharacters] = useState<Character[]>(mockCharacters);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
-  const filteredCharacters = mockCharacters.filter((char) => {
+  const fetchCharacters = useCallback(async (resetPage = false) => {
+    setLoading(true);
+    const currentPage = resetPage ? 1 : page;
+    if (resetPage) setPage(1);
+
+    try {
+      const params = new URLSearchParams();
+      if (activeCategory !== "All Personas") {
+        params.set("category", activeCategory.toLowerCase().replace(/ /g, "-"));
+      }
+      if (activeTraits.length > 0) {
+        params.set("trait", activeTraits[0]);
+      }
+      if (searchQuery) {
+        params.set("search", searchQuery);
+      }
+      params.set("page", String(currentPage));
+      params.set("limit", "20");
+
+      const res = await fetch(`/api/characters?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.characters?.length > 0) {
+          setCharacters(data.characters);
+          setHasMore(data.hasMore ?? false);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch {
+      // Fallback to mock data
+    }
+
+    // Fallback: filter mock data client-side
+    let filtered = [...mockCharacters];
     if (activeCategory !== "All Personas") {
       const cat = activeCategory.toLowerCase().replace(/ /g, "-");
-      if (char.category !== cat) return false;
+      filtered = filtered.filter((c) => c.category === cat);
     }
     if (activeTraits.length > 0) {
-      if (!activeTraits.some((t) => char.traits.includes(t))) return false;
+      filtered = filtered.filter((c) =>
+        activeTraits.some((t) => c.traits.includes(t))
+      );
     }
-    return true;
-  });
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.tagline.toLowerCase().includes(q)
+      );
+    }
+    setCharacters(filtered);
+    setHasMore(false);
+    setLoading(false);
+  }, [activeCategory, activeTraits, searchQuery, page]);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchCharacters(true);
+    };
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory, activeTraits, searchQuery]);
 
   function toggleTrait(trait: string) {
     setActiveTraits((prev) =>
       prev.includes(trait) ? prev.filter((t) => t !== trait) : [...prev, trait]
     );
+  }
+
+  function handleLoadMore() {
+    setPage((p) => p + 1);
+    fetchCharacters(false);
   }
 
   return (
@@ -129,13 +194,21 @@ export default function DiscoverPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredCharacters.map((char) => (
-              <CharacterCard key={char.id} character={char} />
-            ))}
-          </div>
+          {loading && characters.length === 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-[280px] rounded-xl bg-surface-highest animate-pulse border border-border" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {characters.map((char) => (
+                <CharacterCard key={char.id} character={char} />
+              ))}
+            </div>
+          )}
 
-          {filteredCharacters.length === 0 && (
+          {!loading && characters.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <span className="material-symbols-outlined text-[48px] text-text-tertiary mb-4">search_off</span>
               <p className="text-text-secondary text-[14px] mb-2">No characters found</p>
@@ -143,10 +216,14 @@ export default function DiscoverPage() {
             </div>
           )}
 
-          {filteredCharacters.length > 0 && (
+          {characters.length > 0 && hasMore && (
             <div className="flex justify-center mt-8">
-              <button className="px-8 py-2.5 bg-surface-highest border border-border rounded-lg text-text-secondary text-[13px] font-medium hover:bg-surface-high hover:text-text-primary transition-colors">
-                Load More
+              <button
+                onClick={handleLoadMore}
+                disabled={loading}
+                className="px-8 py-2.5 bg-surface-highest border border-border rounded-lg text-text-secondary text-[13px] font-medium hover:bg-surface-high hover:text-text-primary transition-colors disabled:opacity-50"
+              >
+                {loading ? "Loading..." : "Load More"}
               </button>
             </div>
           )}

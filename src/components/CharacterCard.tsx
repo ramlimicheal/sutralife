@@ -7,9 +7,12 @@ import { formatViewCount } from "@/lib/utils";
 
 interface CharacterCardProps {
   character: Character;
+  nsfwEnabled?: boolean;
 }
 
-export default function CharacterCard({ character }: CharacterCardProps) {
+export default function CharacterCard({ character, nsfwEnabled = false }: CharacterCardProps) {
+  const shouldBlur = character.is_nsfw && !nsfwEnabled;
+
   return (
     <Link href={`/character/${character.id}`} className="group">
       <div className="bg-surface rounded-xl overflow-hidden hover:bg-surface-high transition-all duration-200 border border-border hover:border-accent/25 hover:shadow-lg hover:shadow-accent/5">
@@ -18,7 +21,7 @@ export default function CharacterCard({ character }: CharacterCardProps) {
             src={character.avatar_url}
             alt={character.name}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`object-cover transition-transform duration-500 group-hover:scale-105 ${shouldBlur ? "blur-xl" : ""}`}
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
           <div className="absolute top-3 left-3">
@@ -27,11 +30,21 @@ export default function CharacterCard({ character }: CharacterCardProps) {
               {formatViewCount(character.view_count)}
             </span>
           </div>
-          {character.is_premium && (
-            <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 flex gap-1.5">
+            {character.is_nsfw && (
+              <span className="px-2 py-0.5 rounded-md bg-coral/80 backdrop-blur-md text-[10px] font-label font-bold text-white">
+                18+
+              </span>
+            )}
+            {character.is_premium && (
               <span className="px-2 py-0.5 rounded-md bg-accent/80 backdrop-blur-md text-[10px] font-label font-bold text-white">
                 PRO
               </span>
+            )}
+          </div>
+          {shouldBlur && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+              <span className="text-white text-[11px] font-bold px-3 py-1.5 rounded-lg bg-coral/80">NSFW - Enable in Settings</span>
             </div>
           )}
         </div>

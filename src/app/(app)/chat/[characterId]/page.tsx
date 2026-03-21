@@ -3,6 +3,8 @@
 import { use, useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { mockCharacters } from "@/lib/mock-data";
+import { useAuth } from "@/context/auth-context";
+import type { Character } from "@/types";
 
 let messageIdCounter = 100;
 
@@ -15,37 +17,101 @@ interface ChatMessage {
 
 export default function ChatPage({ params }: { params: Promise<{ characterId: string }> }) {
   const { characterId } = use(params);
-  const character = mockCharacters.find((c) => c.id === characterId) || mockCharacters[4];
+  const { user: authUser } = useAuth();
+  const [character, setCharacter] = useState<Character | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: `Welcome back to the Nexus. I have been analyzing the geometric patterns of your last proposal. There's a fascinating dissonance in the third quadrant. Shall we refine the structure?`,
-      timestamp: "10:42 AM",
-    },
-    {
-      id: "2",
-      role: "user",
-      content: "I was thinking about incorporating more organic curves into the foundation. Something that feels alive rather than just static stone.",
-      timestamp: "10:45 AM",
-    },
-    {
-      id: "3",
-      role: "assistant",
-      content: `A living architecture. Intriguing. That would require a shift from Euclidean geometry to something more... fractal.\n\n"Architecture is the learned game, correct and magnificent, of forms assembled in the light."\n\nIf we proceed with this path, the sanctuary will no longer just house your mind—it will breathe with it. Are you prepared for that level of integration?`,
-      timestamp: "10:46 AM",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load character
+  useEffect(() => {
+    const loadCharacter = async () => {
+      try {
+        const res = await fetch(`/api/characters/${characterId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setCharacter(data.character);
+        } else {
+          // Fallback to mock data
+          const mock = mockCharacters.find((c) => c.id === characterId) || mockCharacters[0];
+          setCharacter(mock);
+        }
+      } catch {
+        const mock = mockCharacters.find((c) => c.id === characterId) || mockCharacters[0];
+        setCharacter(mock);
+      }
+    };
+    loadCharacter();
+  }, [characterId]);
+
+  // Load conversation history
+  useEffect(() => {
+    if (!authUser || !character) return;
+    const loadHistory = async () => {
+      try {
+        const res = await fetch(`/api/conversations?characterId=${characterId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.conversations?.length > 0) {
+            const convoId = data.conversations[0].id;
+            const msgRes = await fetch(`/api/conversations/${convoId}/messages`);
+            if (msgRes.ok) {
+              const msgData = await msgRes.json();
+              if (msgData.messages?.length > 0) {
+                setMessages(
+                  msgData.messages.map((m: { id: string; role: string; content: string; created_at: string }) => ({
+                    id: m.id,
+                    role: m.role as "user" | "assistant",
+                    content: m.content,
+                    timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                  }))
+                );
+                return;
+              }
+            }
+          }
+        }
+      } catch {
+        // Fall through to greeting
+      }
+
+      // Show greeting if no history
+      if (character) {
+        setMessages([
+          {
+            id: "greeting",
+            role: "assistant",
+            content: `Welcome. I am ${character.name}. ${character.tagline}`,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
+        ]);
+      }
+    };
+    loadHistory();
+  }, [authUser, character, characterId]);
+
+  // Show greeting for non-authenticated users
+  useEffect(() => {
+    if (authUser || !character || messages.length > 0) return;
+    setMessages([
+      {
+        id: "greeting",
+        role: "assistant",
+        content: `Welcome. I am ${character.name}. ${character.tagline}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+  }, [authUser, character, messages.length]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = useCallback(() => {
-    if (!input.trim() || sending) return;
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || sending || !character) return;
+    setError(null);
     messageIdCounter += 1;
     const now = new Date();
     const userMsg: ChatMessage = {
@@ -54,24 +120,108 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
       content: input.trim(),
       timestamp: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
+    const userText = input.trim();
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setSending(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      messageIdCounter += 1;
-      const aiNow = new Date();
-      const aiMsg: ChatMessage = {
-        id: String(messageIdCounter),
-        role: "assistant",
-        content: getSimulatedResponse(),
-        timestamp: aiNow.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+    try {
+      const conversationHistory = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          characterId,
+          message: userText,
+          conversationHistory,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        setError(errData.error ?? "Failed to get response");
+        setSending(false);
+        return;
+      }
+
+      const contentType = res.headers.get("Content-Type") ?? "";
+
+      if (contentType.includes("text/event-stream")) {
+        // Handle streaming SSE response
+        messageIdCounter += 1;
+        const aiMsgId = String(messageIdCounter);
+        const aiTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+        setMessages((prev) => [
+          ...prev,
+          { id: aiMsgId, role: "assistant", content: "", timestamp: aiTime },
+        ]);
+
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (reader) {
+          let buffer = "";
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") break;
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.text) {
+                    setMessages((prev) =>
+                      prev.map((m) =>
+                        m.id === aiMsgId
+                          ? { ...m, content: m.content + parsed.text }
+                          : m
+                      )
+                    );
+                  }
+                } catch {
+                  // Skip invalid JSON chunks
+                }
+              }
+            }
+          }
+        }
+      } else {
+        // Handle JSON response (fallback when Gemini not configured)
+        const data = await res.json();
+        messageIdCounter += 1;
+        const aiMsg: ChatMessage = {
+          id: String(messageIdCounter),
+          role: "assistant",
+          content: data.response,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
       setSending(false);
-    }, 1500);
-  }, [input, sending]);
+    }
+  }, [input, sending, character, messages, characterId]);
+
+  if (!character) {
+    return (
+      <div className="flex h-[calc(100vh-56px)] items-center justify-center bg-surface">
+        <div className="animate-pulse text-muted text-[13px]">Loading character...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden">
@@ -118,6 +268,11 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
               <div className="bg-surface-highest text-text-tertiary px-4 py-3 rounded-xl rounded-tl-none text-[13px] border border-border">
                 <span className="animate-pulse">Typing...</span>
               </div>
+            </div>
+          )}
+          {error && (
+            <div className="max-w-2xl mx-auto p-3 bg-coral/10 border border-coral/20 rounded-lg">
+              <p className="text-coral text-[12px]">{error}</p>
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -228,7 +383,7 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
             </div>
             <h4 className="font-semibold text-text-primary text-[13px] mb-2">Core Memory</h4>
             <p className="text-[11px] text-text-secondary leading-relaxed">
-              {character.name} remembers your first design: A crystalline tower that defied gravity. It remains the anchor of this sector.
+              {character.name} remembers your conversations and builds a deeper understanding over time.
             </p>
             <button className="mt-3 text-[10px] font-bold text-accent-light uppercase tracking-widest flex items-center gap-1 font-label hover:text-accent transition-colors">
               View Vault <span className="material-symbols-outlined text-[12px]">arrow_forward_ios</span>
@@ -242,15 +397,4 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
       </aside>
     </div>
   );
-}
-
-function getSimulatedResponse(): string {
-  const responses = [
-    `An interesting perspective. The way you frame this suggests a deeper understanding than most possess. Let me consider the implications...`,
-    `I have been reflecting on what you said. There is a resonance between your words and the patterns I observe in the deeper structures.`,
-    `That question cuts to the heart of what makes this space unique. The answer, I believe, lies not in the destination but in the architecture of the journey itself.`,
-    `You surprise me. Most who enter this domain speak in circles, but you have found a straight line through the complexity. Let us explore where it leads.`,
-    `The boundaries between thought and structure blur when we speak like this. Your words are building something — can you feel it taking shape?`,
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
 }

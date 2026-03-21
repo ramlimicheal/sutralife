@@ -1,10 +1,50 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { pricingTiers } from "@/lib/mock-data";
+import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/components/Toast";
 
 export default function PricingPage() {
+  const router = useRouter();
+  const { user: authUser } = useAuth();
+  const { showToast } = useToast();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [subscribing, setSubscribing] = useState<string | null>(null);
+
+  async function handleSubscribe(tierName: string) {
+    if (!authUser) {
+      router.push("/auth");
+      return;
+    }
+    setSubscribing(tierName);
+    try {
+      const res = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: tierName.toLowerCase(),
+          period: billingCycle === "yearly" ? "yearly" : "monthly",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.checkoutUrl) {
+          const url = data.checkoutUrl as string;
+          globalThis.location.assign(url);
+          return;
+        }
+        showToast("Subscription created! Configure Razorpay to enable checkout.", "success");
+      } else {
+        const errData = await res.json();
+        showToast(errData.error ?? "Failed to subscribe", "error");
+      }
+    } catch {
+      showToast("Network error. Please try again.", "error");
+    }
+    setSubscribing(null);
+  }
 
   return (
     <div className="px-4 md:px-6 py-8">
@@ -59,7 +99,7 @@ export default function PricingPage() {
                   {tier.name}
                 </h3>
                 <div className="flex items-baseline gap-1 mt-3">
-                  <span className="text-3xl font-extrabold text-text-primary">{"\u20B9"}{price}</span>
+                  <span className="text-3xl font-extrabold text-text-primary">${price.toFixed(2)}</span>
                   <span className="text-text-tertiary text-[12px]">/{billingCycle === "yearly" ? "mo (billed yearly)" : "mo"}</span>
                 </div>
                 <p className="text-text-secondary text-[12px] mt-2">{tier.description}</p>
@@ -75,13 +115,15 @@ export default function PricingPage() {
               </div>
 
               <button
-                className={`w-full py-3 rounded-xl font-semibold text-[13px] transition-all ${
+                onClick={() => handleSubscribe(tier.name)}
+                disabled={subscribing === tier.name}
+                className={`w-full py-3 rounded-xl font-semibold text-[13px] transition-all disabled:opacity-50 ${
                   isPopular
                     ? "cta-gradient text-white hover:opacity-90 shadow-lg shadow-accent/15"
                     : "bg-surface-highest border border-border text-text-primary hover:bg-surface-high"
                 }`}
               >
-                {tier.name === "Basic" ? "Get Started" : tier.name === "Premium" ? "Subscribe Now" : "Go Collector"}
+                {subscribing === tier.name ? "Processing..." : tier.name === "Basic" ? "Get Started" : tier.name === "Premium" ? "Subscribe Now" : "Go Collector"}
               </button>
             </div>
           );
@@ -94,7 +136,7 @@ export default function PricingPage() {
         <div className="space-y-4">
           {[
             { q: "Can I switch plans anytime?", a: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect at the start of your next billing cycle." },
-            { q: "What payment methods do you accept?", a: "We accept all major credit/debit cards, UPI, net banking, and wallets through Razorpay." },
+            { q: "What payment methods do you accept?", a: "We accept all major credit and debit cards through our secure payment processor." },
             { q: "Is there a free trial?", a: "We offer a limited free tier that lets you explore basic characters and features. No credit card required." },
             { q: "How do I cancel my subscription?", a: "You can cancel anytime from Settings > Subscription. You'll retain access until the end of your current billing period." },
           ].map((faq, i) => (

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/components/Toast";
 
 const categories = ["Cyberpunk", "Historical", "Fantasy", "Slice of Life", "Supernatural"];
 const speakingStyles = ["Neutral", "Poetic", "Formal", "Casual", "Mysterious", "Aggressive", "Warm", "Cold"];
@@ -9,7 +11,13 @@ const availableTraits = ["Romantic", "Mysterious", "Aggressive", "Cheerful", "Lo
 
 export default function CreateCharacterPage() {
   const router = useRouter();
+  const { user: authUser } = useAuth();
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     name: "",
     tagline: "",
@@ -40,9 +48,67 @@ export default function CreateCharacterPage() {
     }
   }
 
-  function handleSubmit() {
-    alert("Character created! (In production, this would save to Supabase)");
-    router.push("/library");
+  function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("File size must be under 5MB", "error");
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
+  async function handleSubmit() {
+    if (!authUser) {
+      showToast("Please log in to create characters", "error");
+      router.push("/auth");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Upload avatar if provided
+      let avatarUrl = "";
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("file", avatarFile);
+        formData.append("bucket", "character-images");
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          avatarUrl = uploadData.url;
+        }
+      }
+
+      const res = await fetch("/api/characters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          tagline: form.tagline,
+          bio: form.bio,
+          avatar_url: avatarUrl,
+          category: form.category.toLowerCase().replace(/ /g, "-"),
+          traits: form.traits,
+          speaking_style: form.speaking_style.toLowerCase(),
+          is_nsfw: form.is_nsfw,
+          is_published: form.is_public,
+        }),
+      });
+
+      if (res.ok) {
+        showToast("Character created successfully!", "success");
+        router.push("/library");
+      } else {
+        const errData = await res.json();
+        showToast(errData.error ?? "Failed to create character", "error");
+      }
+    } catch {
+      showToast("Network error. Please try again.", "error");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -99,10 +165,26 @@ export default function CreateCharacterPage() {
               </div>
               <div>
                 <label className="block text-[12px] font-label font-bold text-text-tertiary uppercase tracking-wider mb-2">Avatar</label>
-                <div className="w-full h-40 bg-bg border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-accent/50 transition-colors">
-                  <span className="material-symbols-outlined text-[32px] text-text-tertiary mb-2">cloud_upload</span>
-                  <p className="text-text-tertiary text-[12px]">Click to upload or drag and drop</p>
-                  <p className="text-text-tertiary/50 text-[10px] mt-1">PNG, JPG up to 5MB</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleAvatarSelect}
+                  className="hidden"
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-40 bg-bg border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-accent/50 transition-colors overflow-hidden"
+                >
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[32px] text-text-tertiary mb-2">cloud_upload</span>
+                      <p className="text-text-tertiary text-[12px]">Click to upload or drag and drop</p>
+                      <p className="text-text-tertiary/50 text-[10px] mt-1">PNG, JPG up to 5MB</p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,17 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CharacterCard from "@/components/CharacterCard";
 import { mockCharacters } from "@/lib/mock-data";
+import { useAuth } from "@/context/auth-context";
+import type { Character } from "@/types";
 
 type Tab = "recent" | "favorites" | "created";
 
 export default function LibraryPage() {
+  const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("recent");
+  const [recentCharacters, setRecentCharacters] = useState<Character[]>(mockCharacters.slice(0, 5));
+  const [favoriteCharacters, setFavoriteCharacters] = useState<Character[]>(mockCharacters.slice(2, 6));
+  const [createdCharacters, setCreatedCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const recentCharacters = mockCharacters.slice(0, 5);
-  const favoriteCharacters = mockCharacters.slice(2, 6);
-  const createdCharacters = mockCharacters.slice(0, 0); // empty for now
+  useEffect(() => {
+    if (!authUser) return;
+    const loadLibrary = async () => {
+      setLoading(true);
+      try {
+        // Fetch recent conversations
+        const convRes = await fetch("/api/conversations");
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          if (convData.conversations?.length > 0) {
+            const recentChars = convData.conversations
+              .filter((c: { characters: Character | null }) => c.characters)
+              .map((c: { characters: Character }) => c.characters);
+            if (recentChars.length > 0) setRecentCharacters(recentChars);
+          }
+        }
+
+        // Fetch favorites
+        const favRes = await fetch("/api/favorites");
+        if (favRes.ok) {
+          const favData = await favRes.json();
+          if (favData.favorites?.length > 0) {
+            const favChars = favData.favorites
+              .filter((f: { characters: Character | null }) => f.characters)
+              .map((f: { characters: Character }) => f.characters);
+            if (favChars.length > 0) setFavoriteCharacters(favChars);
+          }
+        }
+
+        // Fetch created characters
+        const charRes = await fetch(`/api/characters?creator=${authUser.id}`);
+        if (charRes.ok) {
+          const charData = await charRes.json();
+          if (charData.characters) setCreatedCharacters(charData.characters);
+        }
+      } catch {
+        // Keep mock data as fallback
+      }
+      setLoading(false);
+    };
+    loadLibrary();
+  }, [authUser]);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: "recent", label: "Recently Chatted", icon: "schedule" },

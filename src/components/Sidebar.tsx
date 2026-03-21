@@ -3,21 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/auth-context";
 
 const navItems = [
   { href: "/discover", label: "Discover", icon: "explore" },
   { href: "/library", label: "Library", icon: "auto_stories" },
   { href: "/chat/5", label: "Messages", icon: "chat_bubble" },
-  { href: "/character/1", label: "Characters", icon: "group" },
+  { href: "/pricing", label: "Pricing", icon: "diamond" },
 ];
 
-const bottomLinks = [
-  { href: "#", label: "Discord", icon: "group_add" },
-  { href: "#", label: "Twitter", icon: "campaign" },
-];
+// Social links - uncomment when ready to add community links
+// const bottomLinks = [
+//   { href: "#", label: "Discord", icon: "group_add" },
+//   { href: "#", label: "Twitter", icon: "campaign" },
+// ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   function isActive(href: string): boolean {
     if (href === "/discover") return pathname === "/discover";
@@ -74,16 +77,35 @@ export default function Sidebar() {
         </div>
 
         <div className="border-t border-border-subtle px-2.5 py-2 space-y-0.5">
-          {bottomLinks.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
+          {user ? (
+            <div className="space-y-0.5">
+              <Link
+                href="/settings"
+                className={cn(
+                  "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors",
+                  pathname === "/settings" ? "bg-accent/8 text-accent-light" : "text-muted hover:bg-surface-high hover:text-text-primary"
+                )}
+              >
+                <span className="material-symbols-outlined text-[18px]">settings</span>
+                Settings
+              </Link>
+              <button
+                onClick={signOut}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-muted hover:bg-surface-high hover:text-coral text-[13px] transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/auth"
               className="flex items-center gap-2.5 px-3 py-2 rounded-md text-muted hover:bg-surface-high hover:text-text-primary text-[13px] transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-              {item.label}
-            </a>
-          ))}
+              <span className="material-symbols-outlined text-[18px]">login</span>
+              Sign In
+            </Link>
+          )}
         </div>
       </aside>
 

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
+import { AuthProvider } from "@/context/auth-context";
+import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,7 +35,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased selection:bg-accent/30">{children}</body>
+      <body className="antialiased selection:bg-accent/30">
+        <AuthProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

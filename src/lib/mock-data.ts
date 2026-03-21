@@ -158,27 +158,27 @@ export const mockCharacters: Character[] = [
 export const heroCharacter = mockCharacters[4]; // The Architect
 
 export const mockAdminStats: AdminStats = {
-  totalRevenue: 482300,
+  totalRevenue: 58200,
   activeSubscribers: 1247,
   premiumCount: 623,
   churnRate: 2.1,
 };
 
 export const mockAdminSubscribers: AdminSubscriber[] = [
-  { id: "1", name: "Arjun Kumar", email: "arjun@example.com", tier: "premium", status: "active", amount: 999, nextBilling: "12 Apr 2026" },
-  { id: "2", name: "Rohan Mehta", email: "rohan@example.com", tier: "collector", status: "active", amount: 2999, nextBilling: "5 Apr 2026" },
-  { id: "3", name: "Priya Sharma", email: "priya@example.com", tier: "basic", status: "active", amount: 299, nextBilling: "18 Apr 2026" },
-  { id: "4", name: "Neha Singh", email: "neha@example.com", tier: "premium", status: "cancelled", amount: 999, nextBilling: "Cancelled" },
-  { id: "5", name: "Vikram Raj", email: "vikram@example.com", tier: "collector", status: "active", amount: 2999, nextBilling: "20 Apr 2026" },
-  { id: "6", name: "Deepak Khan", email: "deepak@example.com", tier: "premium", status: "active", amount: 999, nextBilling: "8 Apr 2026" },
-  { id: "7", name: "Sneha Agarwal", email: "sneha@example.com", tier: "basic", status: "active", amount: 299, nextBilling: "15 Apr 2026" },
-  { id: "8", name: "Meera Joshi", email: "meera@example.com", tier: "premium", status: "past_due", amount: 999, nextBilling: "22 Mar 2026" },
+  { id: "1", name: "James Wilson", email: "james@example.com", tier: "premium", status: "active", amount: 24.99, nextBilling: "12 Apr 2026" },
+  { id: "2", name: "Sarah Chen", email: "sarah@example.com", tier: "collector", status: "active", amount: 49.99, nextBilling: "5 Apr 2026" },
+  { id: "3", name: "Mike Johnson", email: "mike@example.com", tier: "basic", status: "active", amount: 9.99, nextBilling: "18 Apr 2026" },
+  { id: "4", name: "Emily Davis", email: "emily@example.com", tier: "premium", status: "cancelled", amount: 24.99, nextBilling: "Cancelled" },
+  { id: "5", name: "Alex Thompson", email: "alex@example.com", tier: "collector", status: "active", amount: 49.99, nextBilling: "20 Apr 2026" },
+  { id: "6", name: "Rachel Kim", email: "rachel@example.com", tier: "premium", status: "active", amount: 24.99, nextBilling: "8 Apr 2026" },
+  { id: "7", name: "David Brown", email: "david@example.com", tier: "basic", status: "active", amount: 9.99, nextBilling: "15 Apr 2026" },
+  { id: "8", name: "Jessica Lee", email: "jessica@example.com", tier: "premium", status: "past_due", amount: 24.99, nextBilling: "22 Mar 2026" },
 ];
 
 export const pricingTiers: PricingTier[] = [
   {
     name: "Basic",
-    price: 299,
+    price: 9.99,
     description: "Perfect for getting started with AI personas",
     features: [
       "10 free characters",
@@ -190,7 +190,7 @@ export const pricingTiers: PricingTier[] = [
   },
   {
     name: "Premium",
-    price: 999,
+    price: 24.99,
     description: "Unlock the full Sanctuary experience",
     highlighted: true,
     features: [
@@ -204,7 +204,7 @@ export const pricingTiers: PricingTier[] = [
   },
   {
     name: "Collector",
-    price: 2999,
+    price: 49.99,
     description: "The ultimate digital persona experience",
     features: [
       "All characters + exclusives",

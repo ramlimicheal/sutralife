@@ -1,16 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { mockAdminStats, mockAdminSubscribers } from "@/lib/mock-data";
 import { getTierBadgeColor, getStatusBadge } from "@/lib/utils";
+import type { Character } from "@/types";
 
 type AdminTab = "subscriptions" | "characters" | "analytics";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>("subscriptions");
   const [searchQuery, setSearchQuery] = useState("");
-  const stats = mockAdminStats;
+  const [stats, setStats] = useState(mockAdminStats);
   const subscribers = mockAdminSubscribers;
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [charLoading, setCharLoading] = useState(false);
+  const [charPage, setCharPage] = useState(1);
+  const [charHasMore, setCharHasMore] = useState(false);
+
+  // Try to load real admin stats
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const res = await fetch("/api/admin/stats");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.stats) setStats(data.stats);
+        }
+      } catch {
+        // Keep mock data
+      }
+    };
+    loadStats();
+  }, []);
+
+  const loadCharacters = useCallback(async (page: number) => {
+    setCharLoading(true);
+    try {
+      const res = await fetch(`/api/characters?page=${page}&limit=10`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.characters) {
+          setCharacters(data.characters);
+          setCharHasMore(data.hasMore ?? false);
+        }
+      }
+    } catch {
+      // Keep empty
+    }
+    setCharLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "characters") {
+      const load = async () => {
+        await loadCharacters(charPage);
+      };
+      load();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, charPage]);
 
   const filteredSubscribers = subscribers.filter(
     (sub) =>
@@ -51,7 +99,7 @@ export default function AdminDashboard() {
             </div>
             <span className="font-label text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Total Revenue</span>
           </div>
-          <p className="text-2xl font-extrabold text-text-primary">{"\u20B9"}{stats.totalRevenue.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-text-primary">${stats.totalRevenue.toLocaleString()}</p>
           <p className="text-success text-[11px] font-semibold mt-1 flex items-center gap-0.5">
             <span className="material-symbols-outlined text-[12px]">trending_up</span>+12.5% this month
           </p>
@@ -182,7 +230,7 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-[13px] text-text-primary font-medium">
-                      {"\u20B9"}{sub.amount.toLocaleString()}
+                      ${sub.amount.toFixed(2)}
                     </td>
                     <td className="px-5 py-3.5 text-[12px] text-text-secondary">
                       {sub.nextBilling}
@@ -226,11 +274,83 @@ export default function AdminDashboard() {
 
       {/* Characters Tab */}
       {activeTab === "characters" && (
-        <div className="bg-surface border border-border rounded-xl p-8 text-center">
-          <span className="material-symbols-outlined text-[48px] text-text-tertiary mb-4">person</span>
-          <h3 className="text-lg font-semibold text-text-primary mb-2">Character Management</h3>
-          <p className="text-text-secondary text-[13px]">Manage, moderate, and review all characters on the platform.</p>
-          <p className="text-text-tertiary text-[11px] mt-2">Coming soon with Supabase integration</p>
+        <div className="bg-surface border border-border rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h3 className="text-[14px] font-semibold text-text-primary">All Characters</h3>
+          </div>
+          {charLoading ? (
+            <div className="p-8 text-center">
+              <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-text-tertiary text-[12px] mt-3">Loading characters...</p>
+            </div>
+          ) : characters.length === 0 ? (
+            <div className="p-8 text-center">
+              <span className="material-symbols-outlined text-[48px] text-text-tertiary mb-4">person</span>
+              <h3 className="text-lg font-semibold text-text-primary mb-2">No Characters Yet</h3>
+              <p className="text-text-secondary text-[13px]">Characters will appear here once created.</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-5 py-3 text-[10px] font-label font-bold text-text-tertiary uppercase tracking-wider">Character</th>
+                      <th className="px-5 py-3 text-[10px] font-label font-bold text-text-tertiary uppercase tracking-wider">Category</th>
+                      <th className="px-5 py-3 text-[10px] font-label font-bold text-text-tertiary uppercase tracking-wider">Rating</th>
+                      <th className="px-5 py-3 text-[10px] font-label font-bold text-text-tertiary uppercase tracking-wider">Chats</th>
+                      <th className="px-5 py-3 text-[10px] font-label font-bold text-text-tertiary uppercase tracking-wider">NSFW</th>
+                      <th className="px-5 py-3 text-[10px] font-label font-bold text-text-tertiary uppercase tracking-wider">Published</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {characters.map((char) => (
+                      <tr key={char.id} className="border-b border-border last:border-0 hover:bg-surface-high/50 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-accent-surface flex items-center justify-center overflow-hidden">
+                              {char.avatar_url ? (
+                                <img src={char.avatar_url} alt={char.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-accent-light font-bold text-[11px]">{char.name[0]}</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-[13px] text-text-primary font-medium">{char.name}</p>
+                              <p className="text-[11px] text-text-tertiary truncate max-w-[200px]">{char.tagline}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-[12px] text-text-secondary capitalize">{char.category}</td>
+                        <td className="px-5 py-3.5 text-[12px] text-text-primary">{char.rating.toFixed(1)}</td>
+                        <td className="px-5 py-3.5 text-[12px] text-text-primary">{char.chat_count.toLocaleString()}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${char.is_nsfw ? "bg-coral/10 text-coral" : "bg-success/10 text-success"}`}>
+                            {char.is_nsfw ? "YES" : "NO"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${char.is_published ? "bg-success/10 text-success" : "bg-surface-highest text-text-tertiary"}`}>
+                            {char.is_published ? "LIVE" : "DRAFT"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {charHasMore && (
+                <div className="px-5 py-3 border-t border-border flex justify-center">
+                  <button
+                    onClick={() => setCharPage((p) => p + 1)}
+                    className="px-4 py-2 bg-surface-highest border border-border rounded-lg text-[12px] text-text-secondary font-medium hover:text-text-primary transition-colors"
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
