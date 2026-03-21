@@ -5,7 +5,9 @@ import { cookies } from "next/headers";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/discover";
+  const nextParam = searchParams.get("next") ?? "/discover";
+  // Validate that next is a safe relative path to prevent open redirect
+  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/discover";
 
   if (code) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

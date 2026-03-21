@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { generateAIResponse, buildSystemPrompt } from "@/lib/gemini";
 import { mockCharacters } from "@/lib/mock-data";
-import { shouldShowNSFW } from "@/lib/nsfw-gate";
+import { shouldShowNSFW, canAccessCharacter } from "@/lib/nsfw-gate";
 import type { User, UserTier } from "@/types";
 
 interface ChatRequestBody {
@@ -32,7 +32,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Server-side NSFW gating: verify user session and profile
+    // Server-side access control: verify user session and profile
+    let user: User | null = null;
     let nsfwEnabled = false;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
           .single();
 
         if (profile) {
-          const user: User = {
+          user = {
             id: authUser.id,
             email: authUser.email ?? "",
             name: "",
@@ -77,12 +78,29 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check NSFW gating: character is NSFW but user hasn't passed all 3 layers
-    if (character.is_nsfw && !nsfwEnabled) {
-      return NextResponse.json(
-        { error: "NSFW content is not enabled. Please enable it in settings and ensure you have a qualifying subscription." },
-        { status: 403 }
-      );
+    // Check character access: NSFW gating + premium tier check
+    if (supabaseUrl && supabaseAnonKey && user) {
+      const access = canAccessCharacter(character, user);
+      if (!access.allowed) {
+        return NextResponse.json(
+          { error: access.reason ?? "Access denied" },
+          { status: 403 }
+        );
+      }
+    } else {
+      // No auth configured or user not logged in — block premium and NSFW characters
+      if (character.is_premium) {
+        return NextResponse.json(
+          { error: "This character requires a Premium or Collector subscription" },
+          { status: 403 }
+        );
+      }
+      if (character.is_nsfw) {
+        return NextResponse.json(
+          { error: "NSFW content requires authentication and a qualifying subscription" },
+          { status: 403 }
+        );
+      }
     }
 
     const systemPrompt = buildSystemPrompt(character, nsfwEnabled);
