@@ -81,6 +81,29 @@ CREATE TABLE public.favorites (
   PRIMARY KEY (user_id, character_id)
 );
 
+-- Memory Vault: stores extracted facts/emotions from conversations
+CREATE TABLE public.memory_entries (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  character_id UUID REFERENCES public.characters(id) ON DELETE CASCADE NOT NULL,
+  category TEXT NOT NULL DEFAULT 'fact' CHECK (category IN ('fact', 'emotion', 'preference', 'event', 'relationship')),
+  content TEXT NOT NULL,
+  importance INTEGER NOT NULL DEFAULT 5 CHECK (importance >= 1 AND importance <= 10),
+  source_message_id UUID REFERENCES public.messages(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Phantom Presence: proactive messages from characters
+CREATE TABLE public.phantom_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  character_id UUID REFERENCES public.characters(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  memory_ref_id UUID REFERENCES public.memory_entries(id) ON DELETE SET NULL,
+  is_read BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes for performance
 CREATE INDEX idx_characters_category ON public.characters(category);
 CREATE INDEX idx_characters_is_published ON public.characters(is_published);
@@ -91,6 +114,10 @@ CREATE INDEX idx_messages_conversation_id ON public.messages(conversation_id);
 CREATE INDEX idx_messages_created_at ON public.messages(created_at);
 CREATE INDEX idx_favorites_user_id ON public.favorites(user_id);
 CREATE INDEX idx_favorites_character_id ON public.favorites(character_id);
+CREATE INDEX idx_memory_entries_user_character ON public.memory_entries(user_id, character_id);
+CREATE INDEX idx_memory_entries_category ON public.memory_entries(category);
+CREATE INDEX idx_phantom_messages_user_id ON public.phantom_messages(user_id);
+CREATE INDEX idx_phantom_messages_is_read ON public.phantom_messages(user_id, is_read);
 
 -- Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -99,6 +126,8 @@ ALTER TABLE public.character_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.memory_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.phantom_messages ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can read/update their own profile
 CREATE POLICY "Users can view own profile" ON public.profiles
@@ -126,6 +155,14 @@ CREATE POLICY "Anyone can view images of published characters" ON public.charact
 
 -- Favorites: users can manage their own favorites
 CREATE POLICY "Users can manage own favorites" ON public.favorites
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Memory entries: users can manage their own memories
+CREATE POLICY "Users can manage own memories" ON public.memory_entries
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Phantom messages: users can manage their own phantom messages
+CREATE POLICY "Users can manage own phantom messages" ON public.phantom_messages
   FOR ALL USING (auth.uid() = user_id);
 
 -- Conversations: users can only access their own

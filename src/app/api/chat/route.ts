@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { buildSystemPrompt } from "@/lib/gemini";
+import { buildSystemPrompt, extractMemories, generatePhantomMessage, type MemoryEntry } from "@/lib/gemini";
 import { mockCharacters } from "@/lib/mock-data";
 import { shouldShowNSFW, canAccessCharacter } from "@/lib/nsfw-gate";
 import type { User, UserTier } from "@/types";
@@ -126,7 +126,33 @@ export async function POST(request: Request) {
       }
     }
 
-    const systemPrompt = buildSystemPrompt(character, nsfwEnabled);
+    // Fetch stored memories for this user+character pair to inject into prompt
+    let memories: MemoryEntry[] = [];
+    if (supabaseUrl && supabaseAnonKey && user) {
+      const cookieStore2 = await cookies();
+      const supabase2 = createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          getAll() { return cookieStore2.getAll(); },
+          setAll() { /* read-only for this query */ },
+        },
+      });
+      const { data: memoryRows } = await supabase2
+        .from("memory_entries")
+        .select("category, content, importance")
+        .eq("user_id", user.id)
+        .eq("character_id", characterId)
+        .order("importance", { ascending: false })
+        .limit(20);
+      if (memoryRows) {
+        memories = memoryRows.map((r: { category: string; content: string; importance: number }) => ({
+          category: r.category,
+          content: r.content,
+          importance: r.importance,
+        }));
+      }
+    }
+
+    const systemPrompt = buildSystemPrompt(character, nsfwEnabled, memories);
     const geminiKey = process.env.GOOGLE_GEMINI_API_KEY;
 
     // Fallback: return simulated response when Gemini is not configured
@@ -154,16 +180,67 @@ export async function POST(request: Request) {
     const result = await chat.sendMessageStream(message);
 
     const encoder = new TextEncoder();
+    let fullResponse = "";
     const stream = new ReadableStream({
       async start(controller) {
         for await (const chunk of result.stream) {
           const text = chunk.text();
           if (text) {
+            fullResponse += text;
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
+
+        // After streaming completes, extract memories and optionally generate phantom message
+        // This runs asynchronously — doesn't block the response
+        if (user && character) {
+          const charName = character.name;
+          const charId = characterId;
+          const userId = user.id;
+          const responseText = fullResponse;
+          const existingMemoryContents = memories.map(m => m.content);
+
+          // Fire-and-forget: extract memories from this exchange
+          extractMemories(charName, message, responseText, existingMemoryContents)
+            .then(async (newMemories) => {
+              if (newMemories.length > 0 && supabaseUrl && supabaseAnonKey) {
+                const { createClient } = await import("@supabase/supabase-js");
+                const adminSupabase = createClient(supabaseUrl, supabaseAnonKey);
+                const rows = newMemories.map((m) => ({
+                  user_id: userId,
+                  character_id: charId,
+                  category: m.category,
+                  content: m.content,
+                  importance: m.importance,
+                }));
+                await adminSupabase.from("memory_entries").insert(rows);
+              }
+            })
+            .catch(() => { /* memory extraction is non-critical */ });
+
+          // Fire-and-forget: occasionally generate phantom message (10% chance per message)
+          if (Math.random() < 0.1 && supabaseUrl && supabaseAnonKey) {
+            generatePhantomMessage(
+              character,
+              memories,
+              (conversationHistory || []).slice(-6)
+            )
+              .then(async (phantomContent) => {
+                if (phantomContent) {
+                  const { createClient } = await import("@supabase/supabase-js");
+                  const adminSupabase = createClient(supabaseUrl, supabaseAnonKey);
+                  await adminSupabase.from("phantom_messages").insert({
+                    user_id: userId,
+                    character_id: charId,
+                    content: phantomContent,
+                  });
+                }
+              })
+              .catch(() => { /* phantom generation is non-critical */ });
+          }
+        }
       },
     });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,26 @@ export default function Sidebar() {
   const { user, signOut } = useAuth();
   const [createOpen, setCreateOpen] = useState(true);
   const [creationsOpen, setCreationsOpen] = useState(false);
+  const [phantomUnread, setPhantomUnread] = useState(0);
+
+  // Poll phantom message unread count
+  useEffect(() => {
+    if (!user) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch("/api/phantom-messages?unreadOnly=true");
+        if (res.ok) {
+          const data = await res.json();
+          setPhantomUnread(data.unreadCount ?? 0);
+        }
+      } catch {
+        // non-critical
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, [user]);
 
   function isActive(href: string): boolean {
     const cleanHref = href.split("?")[0];
@@ -178,6 +198,32 @@ export default function Sidebar() {
 
           {/* Divider */}
           <div className="h-px bg-border-subtle my-2" />
+
+          {/* Phantom Messages */}
+          <Link
+            href="/phantom-messages"
+            className={cn(
+              "flex items-center justify-between px-3 py-2 rounded-md text-[13px] transition-colors",
+              pathname === "/phantom-messages"
+                ? "bg-accent/8 text-accent-light font-medium"
+                : "text-muted hover:bg-surface-high hover:text-text-primary"
+            )}
+          >
+            <span className="flex items-center gap-2.5">
+              <span
+                className="material-symbols-outlined text-[18px]"
+                style={pathname === "/phantom-messages" ? { fontVariationSettings: "'FILL' 1" } : undefined}
+              >
+                notifications_active
+              </span>
+              Phantom Messages
+            </span>
+            {phantomUnread > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-coral text-white min-w-[18px] text-center">
+                {phantomUnread > 99 ? "99+" : phantomUnread}
+              </span>
+            )}
+          </Link>
 
           {/* Pricing */}
           <Link

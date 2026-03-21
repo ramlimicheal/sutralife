@@ -15,6 +15,30 @@ interface ChatMessage {
   timestamp: string;
 }
 
+interface MemoryItem {
+  id: string;
+  category: string;
+  content: string;
+  importance: number;
+  created_at: string;
+}
+
+const categoryIcons: Record<string, string> = {
+  fact: "info",
+  emotion: "mood",
+  preference: "tune",
+  event: "event",
+  relationship: "group",
+};
+
+const categoryColors: Record<string, string> = {
+  fact: "text-accent-light bg-accent/10 border-accent/20",
+  emotion: "text-coral bg-coral/10 border-coral/20",
+  preference: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+  event: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+  relationship: "text-sky-400 bg-sky-400/10 border-sky-400/20",
+};
+
 export default function ChatPage({ params }: { params: Promise<{ characterId: string }> }) {
   const { characterId } = use(params);
   const { user: authUser } = useAuth();
@@ -24,6 +48,12 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Memory Vault state
+  const [vaultOpen, setVaultOpen] = useState(false);
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
+  const [memoriesLoading, setMemoriesLoading] = useState(false);
+  const [memoryCount, setMemoryCount] = useState(0);
 
   // Load character
   useEffect(() => {
@@ -105,9 +135,62 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
     ]);
   }, [authUser, character, messages.length]);
 
+  // Load memory count on mount
+  useEffect(() => {
+    if (!authUser) return;
+    const loadMemoryCount = async () => {
+      try {
+        const res = await fetch(`/api/memories?characterId=${characterId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMemoryCount(data.memories?.length ?? 0);
+        }
+      } catch {
+        // non-critical
+      }
+    };
+    loadMemoryCount();
+  }, [authUser, characterId]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const loadMemories = useCallback(async () => {
+    setMemoriesLoading(true);
+    try {
+      const res = await fetch(`/api/memories?characterId=${characterId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMemories(data.memories ?? []);
+        setMemoryCount(data.memories?.length ?? 0);
+      }
+    } catch {
+      // non-critical
+    } finally {
+      setMemoriesLoading(false);
+    }
+  }, [characterId]);
+
+  const deleteMemory = async (memoryId: string) => {
+    try {
+      const res = await fetch(`/api/memories?id=${memoryId}`, { method: "DELETE" });
+      if (res.ok) {
+        setMemories((prev) => prev.filter((m) => m.id !== memoryId));
+        setMemoryCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch {
+      // non-critical
+    }
+  };
+
+  const clearAllMemories = async () => {
+    for (const memory of memories) {
+      await deleteMemory(memory.id);
+    }
+    setMemories([]);
+    setMemoryCount(0);
+  };
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || sending || !character) return;
@@ -208,6 +291,18 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
         };
         setMessages((prev) => [...prev, aiMsg]);
       }
+      // After AI responds, refresh memory count (extraction happens server-side)
+      setTimeout(async () => {
+        try {
+          const memRes = await fetch(`/api/memories?characterId=${characterId}`);
+          if (memRes.ok) {
+            const memData = await memRes.json();
+            setMemoryCount(memData.memories?.length ?? 0);
+          }
+        } catch {
+          // non-critical
+        }
+      }, 3000);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -376,25 +471,147 @@ export default function ChatPage({ params }: { params: Promise<{ characterId: st
             </div>
           </div>
 
-          {/* Memory Card */}
+          {/* Memory Vault Card */}
           <div className="bg-surface-high p-5 rounded-xl border border-accent/10 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-5xl">psychology</span>
             </div>
-            <h4 className="font-semibold text-text-primary text-[13px] mb-2">Core Memory</h4>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold text-text-primary text-[13px]">Memory Vault</h4>
+              {memoryCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent/15 text-accent-light font-label">
+                  {memoryCount} {memoryCount === 1 ? "memory" : "memories"}
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-text-secondary leading-relaxed">
               {character.name} remembers your conversations and builds a deeper understanding over time.
             </p>
-            <button className="mt-3 text-[10px] font-bold text-accent-light uppercase tracking-widest flex items-center gap-1 font-label hover:text-accent transition-colors">
+            <button
+              onClick={() => {
+                setVaultOpen(true);
+                loadMemories();
+              }}
+              className="mt-3 text-[10px] font-bold text-accent-light uppercase tracking-widest flex items-center gap-1 font-label hover:text-accent transition-colors"
+            >
               View Vault <span className="material-symbols-outlined text-[12px]">arrow_forward_ios</span>
             </button>
           </div>
 
-          <button className="w-full py-3 rounded-xl bg-surface-highest text-coral font-semibold text-[13px] border border-coral/15 hover:bg-coral/10 transition-colors flex items-center justify-center gap-2">
+          <button
+            onClick={clearAllMemories}
+            className="w-full py-3 rounded-xl bg-surface-highest text-coral font-semibold text-[13px] border border-coral/15 hover:bg-coral/10 transition-colors flex items-center justify-center gap-2"
+          >
             <span className="material-symbols-outlined text-[16px]">delete_sweep</span>Clear Memory
           </button>
         </div>
       </aside>
+
+      {/* Memory Vault Modal */}
+      {vaultOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setVaultOpen(false)} />
+          <div className="relative w-full max-w-lg mx-4 max-h-[80vh] bg-surface border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl cta-gradient flex items-center justify-center">
+                  <span className="material-symbols-outlined text-bg text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-text-primary">Memory Vault</h3>
+                  <p className="text-[11px] text-text-secondary">
+                    {character.name}&apos;s memories of you
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setVaultOpen(false)}
+                className="w-8 h-8 rounded-lg bg-surface-high flex items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            {/* Memory List */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              {memoriesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-pulse text-text-tertiary text-[13px]">Loading memories...</div>
+                </div>
+              ) : memories.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <span className="material-symbols-outlined text-[48px] text-text-tertiary mb-3 opacity-30">psychology</span>
+                  <p className="text-[13px] text-text-secondary font-medium">No memories yet</p>
+                  <p className="text-[11px] text-text-tertiary mt-1 max-w-[280px]">
+                    Chat with {character.name} and share things about yourself. Memories are extracted automatically.
+                  </p>
+                </div>
+              ) : (
+                memories.map((memory) => (
+                  <div
+                    key={memory.id}
+                    className="group flex items-start gap-3 p-3 rounded-xl bg-surface-high border border-border hover:border-accent/15 transition-colors"
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${categoryColors[memory.category] ?? "text-text-secondary bg-surface-highest border-border"}`}>
+                      <span className="material-symbols-outlined text-[16px]">
+                        {categoryIcons[memory.category] ?? "notes"}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] text-text-primary leading-relaxed">{memory.content}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[9px] font-bold font-label text-text-tertiary uppercase tracking-widest">
+                          {memory.category}
+                        </span>
+                        <span className="text-text-tertiary text-[9px]">&bull;</span>
+                        <span className="text-[9px] text-text-tertiary">
+                          {new Date(memory.created_at).toLocaleDateString()}
+                        </span>
+                        <span className="text-text-tertiary text-[9px]">&bull;</span>
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className={`w-1 h-1 rounded-full ${
+                                i < Math.ceil(memory.importance / 2) ? "bg-accent-light" : "bg-surface-highest"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deleteMemory(memory.id)}
+                      className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center text-text-tertiary hover:text-coral hover:bg-coral/10 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            {memories.length > 0 && (
+              <div className="px-6 py-3 border-t border-border flex items-center justify-between">
+                <span className="text-[11px] text-text-tertiary">
+                  {memories.length} {memories.length === 1 ? "memory" : "memories"} stored
+                </span>
+                <button
+                  onClick={() => {
+                    clearAllMemories();
+                    setVaultOpen(false);
+                  }}
+                  className="text-[11px] font-bold text-coral hover:text-coral/80 transition-colors font-label uppercase tracking-wider"
+                >
+                  Clear All
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
