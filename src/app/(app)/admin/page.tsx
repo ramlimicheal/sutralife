@@ -40,7 +40,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         if (data.characters) {
-          setCharacters(data.characters);
+          setCharacters(prev => page === 1 ? data.characters : [...prev, ...data.characters]);
           setCharHasMore(data.hasMore ?? false);
         }
       }

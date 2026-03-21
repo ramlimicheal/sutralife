@@ -359,7 +359,8 @@ export default function CreateCharacterPage() {
         ) : (
           <button
             onClick={handleSubmit}
-            className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2"
+            disabled={submitting}
+            className="px-6 py-2.5 cta-gradient text-white font-semibold text-[13px] rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-30"
           >
             <span className="material-symbols-outlined text-[16px]">publish</span>
             Publish Character

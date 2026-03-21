@@ -76,7 +76,7 @@ export default function PricingPage() {
       {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
         {pricingTiers.map((tier) => {
-          const price = billingCycle === "yearly" ? Math.round(tier.price * 0.8) : tier.price;
+          const price = billingCycle === "yearly" ? Math.round(tier.price * 0.8 * 100) / 100 : tier.price;
           const isPopular = tier.name === "Premium";
 
           return (
