@@ -42,7 +42,7 @@ export default function DiscoverPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.characters?.length > 0) {
-          setCharacters(data.characters);
+          setCharacters(prev => resetPage ? data.characters : [...prev, ...data.characters]);
           setHasMore(data.hasMore ?? false);
           setLoading(false);
           return;

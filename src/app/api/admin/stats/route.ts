@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
 export async function GET() {
   try {
@@ -36,22 +37,29 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get stats
-    const { count: totalUsers } = await supabase
+    // Use service role client to bypass RLS for aggregate queries
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      return NextResponse.json({ stats: null });
+    }
+    const adminClient = createClient(supabaseUrl, serviceKey);
+
+    // Get stats using service role (bypasses RLS)
+    const { count: totalUsers } = await adminClient
       .from("profiles")
       .select("*", { count: "exact", head: true });
 
-    const { count: activeSubscribers } = await supabase
+    const { count: activeSubscribers } = await adminClient
       .from("profiles")
       .select("*", { count: "exact", head: true })
       .eq("subscription_status", "active");
 
-    const { count: premiumCount } = await supabase
+    const { count: premiumCount } = await adminClient
       .from("profiles")
       .select("*", { count: "exact", head: true })
       .eq("tier", "premium");
 
-    const { count: totalCharacters } = await supabase
+    const { count: totalCharacters } = await adminClient
       .from("characters")
       .select("*", { count: "exact", head: true });
 

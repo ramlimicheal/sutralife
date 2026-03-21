@@ -175,10 +175,18 @@ export async function POST(request: Request) {
       },
     });
 
-    // Persist refreshed auth cookies on streaming response
+    // Persist refreshed auth cookies on streaming response with full attributes
     responseCookies.forEach(({ name, value, options }) => {
+      const parts = [`${name}=${value}`];
       const path = typeof options.path === "string" ? options.path : "/";
-      streamResponse.headers.append("Set-Cookie", `${name}=${value}; Path=${path}; HttpOnly; SameSite=Lax`);
+      parts.push(`Path=${path}`);
+      if (options.maxAge != null) parts.push(`Max-Age=${options.maxAge}`);
+      if (options.expires instanceof Date) parts.push(`Expires=${options.expires.toUTCString()}`);
+      if (options.domain) parts.push(`Domain=${options.domain}`);
+      if (options.secure) parts.push("Secure");
+      if (options.httpOnly) parts.push("HttpOnly");
+      if (options.sameSite) parts.push(`SameSite=${options.sameSite}`);
+      streamResponse.headers.append("Set-Cookie", parts.join("; "));
     });
 
     return streamResponse;
