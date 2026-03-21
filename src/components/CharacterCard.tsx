@@ -57,13 +57,16 @@ export default function CharacterCard({ character }: CharacterCardProps) {
               <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               <span className="text-[11px] font-bold font-label">{character.rating}</span>
             </div>
-            <Link
-              href={`/chat/${character.id}`}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = `/chat/${character.id}`;
+              }}
               className="w-7 h-7 rounded-lg bg-accent/10 text-accent-light flex items-center justify-center hover:bg-accent hover:text-white transition-all"
-              onClick={(e) => e.stopPropagation()}
             >
               <span className="material-symbols-outlined text-[14px]">chat</span>
-            </Link>
+            </button>
           </div>
         </div>
       </div>

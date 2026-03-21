@@ -72,8 +72,8 @@ export function canAccessCharacter(
   }
 
   // Premium character requires premium tier
-  if (character.is_premium && user.tier === "free") {
-    return { allowed: false, reason: "This character requires a subscription" };
+  if (character.is_premium && (user.tier === "free" || user.tier === "basic")) {
+    return { allowed: false, reason: "This character requires a Premium or Collector subscription" };
   }
 
   return { allowed: true };

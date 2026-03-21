@@ -12,13 +12,13 @@ export function cn(...classes: (string | boolean | undefined | null)[]): string 
 export function getTierBadgeColor(tier: string): string {
   switch (tier) {
     case "premium":
-      return "bg-purple-900/20 text-purple-300 border-purple-900/50";
+      return "bg-purple-900/20 text-purple-300 border border-purple-900/50";
     case "collector":
-      return "bg-yellow-900/20 text-yellow-300 border-yellow-900/50";
+      return "bg-yellow-900/20 text-yellow-300 border border-yellow-900/50";
     case "basic":
-      return "bg-gray-700/30 text-gray-400 border-gray-700";
+      return "bg-gray-700/30 text-gray-400 border border-gray-700";
     default:
-      return "bg-gray-700/30 text-gray-400 border-gray-700";
+      return "bg-gray-700/30 text-gray-400 border border-gray-700";
   }
 }
 
