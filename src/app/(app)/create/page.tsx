@@ -56,6 +56,7 @@ export default function CreateCharacterPage() {
       return;
     }
     setAvatarFile(file);
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarPreview(URL.createObjectURL(file));
   }
 

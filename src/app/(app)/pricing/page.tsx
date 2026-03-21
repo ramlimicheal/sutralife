@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { pricingTiers } from "@/lib/mock-data";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/components/Toast";
+import { openRazorpayCheckout } from "@/lib/razorpay";
 
 export default function PricingPage() {
   const router = useRouter();
-  const { user: authUser } = useAuth();
+  const { user: authUser, profile } = useAuth();
   const { showToast } = useToast();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [subscribing, setSubscribing] = useState<string | null>(null);
@@ -30,12 +31,25 @@ export default function PricingPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.checkoutUrl) {
-          const url = data.checkoutUrl as string;
-          globalThis.location.assign(url);
-          return;
-        }
-        showToast("Subscription created! Configure Razorpay to enable checkout.", "success");
+        await openRazorpayCheckout({
+          orderId: data.orderId,
+          amount: data.amount,
+          currency: data.currency,
+          keyId: data.keyId,
+          userName: profile?.name ?? "",
+          userEmail: authUser.email ?? "",
+          planName: tierName,
+          onSuccess: () => {
+            showToast("Payment successful! Your subscription is now active.", "success");
+            setSubscribing(null);
+            router.push("/settings");
+          },
+          onFailure: (error) => {
+            showToast(error.description ?? "Payment failed", "error");
+            setSubscribing(null);
+          },
+        });
+        return;
       } else {
         const errData = await res.json();
         showToast(errData.error ?? "Failed to subscribe", "error");

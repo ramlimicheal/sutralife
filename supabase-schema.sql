@@ -73,6 +73,14 @@ CREATE TABLE public.messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Favorites table
+CREATE TABLE public.favorites (
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  character_id UUID REFERENCES public.characters(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, character_id)
+);
+
 -- Indexes for performance
 CREATE INDEX idx_characters_category ON public.characters(category);
 CREATE INDEX idx_characters_is_published ON public.characters(is_published);
@@ -81,6 +89,8 @@ CREATE INDEX idx_conversations_user_id ON public.conversations(user_id);
 CREATE INDEX idx_conversations_character_id ON public.conversations(character_id);
 CREATE INDEX idx_messages_conversation_id ON public.messages(conversation_id);
 CREATE INDEX idx_messages_created_at ON public.messages(created_at);
+CREATE INDEX idx_favorites_user_id ON public.favorites(user_id);
+CREATE INDEX idx_favorites_character_id ON public.favorites(character_id);
 
 -- Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -88,6 +98,7 @@ ALTER TABLE public.characters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.character_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can read/update their own profile
 CREATE POLICY "Users can view own profile" ON public.profiles
@@ -112,6 +123,10 @@ CREATE POLICY "Anyone can view images of published characters" ON public.charact
       AND characters.is_published = true
     )
   );
+
+-- Favorites: users can manage their own favorites
+CREATE POLICY "Users can manage own favorites" ON public.favorites
+  FOR ALL USING (auth.uid() = user_id);
 
 -- Conversations: users can only access their own
 CREATE POLICY "Users can manage own conversations" ON public.conversations

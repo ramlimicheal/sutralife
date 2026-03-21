@@ -4,12 +4,13 @@ import { cookies } from "next/headers";
 
 interface SubscriptionRequestBody {
   planId: string;
+  period?: "monthly" | "yearly";
 }
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as SubscriptionRequestBody;
-    const { planId } = body;
+    const { planId, period = "monthly" } = body;
 
     if (!planId) {
       return NextResponse.json(
@@ -58,14 +59,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // USA market pricing in cents (USD)
-    const planPrices: Record<string, number> = {
+    // USA market pricing in cents (USD) - monthly
+    const monthlyPrices: Record<string, number> = {
       basic: 999,      // $9.99 in cents
       premium: 2499,   // $24.99 in cents
       collector: 4999,  // $49.99 in cents
     };
 
-    const amount = planPrices[planId];
+    const monthlyPrice = monthlyPrices[planId];
+    // Yearly: 20% discount, billed as 12 months upfront
+    const amount = period === "yearly"
+      ? Math.round(monthlyPrice * 0.8) * 12
+      : monthlyPrice;
     if (!amount) {
       return NextResponse.json(
         { error: "Invalid plan ID" },
@@ -86,6 +91,7 @@ export async function POST(request: Request) {
         notes: {
           userId,
           planId,
+          period,
         },
       }),
     });
