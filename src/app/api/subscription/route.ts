@@ -119,7 +119,31 @@ export async function POST(request: Request) {
 // Webhook handler for Razorpay payment events
 export async function PUT(request: Request) {
   try {
-    const body = await request.json();
+    // Verify Razorpay webhook signature
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return NextResponse.json({ error: "Webhook secret not configured" }, { status: 503 });
+    }
+
+    const rawBody = await request.text();
+    const signature = request.headers.get("X-Razorpay-Signature");
+    if (!signature) {
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    }
+
+    // HMAC-SHA256 signature verification
+    const { createHmac, timingSafeEqual } = await import("crypto");
+    const expectedSignature = createHmac("sha256", webhookSecret)
+      .update(rawBody)
+      .digest("hex");
+
+    const sigBuffer = Buffer.from(signature, "hex");
+    const expectedBuffer = Buffer.from(expectedSignature, "hex");
+    if (sigBuffer.length !== expectedBuffer.length || !timingSafeEqual(sigBuffer, expectedBuffer)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
     const event = body.event as string;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

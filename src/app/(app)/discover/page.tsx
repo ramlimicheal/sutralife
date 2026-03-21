@@ -19,9 +19,9 @@ export default function DiscoverPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  const fetchCharacters = useCallback(async (resetPage = false) => {
+  const fetchCharacters = useCallback(async (resetPage = false, explicitPage?: number) => {
     setLoading(true);
-    const currentPage = resetPage ? 1 : page;
+    const currentPage = explicitPage ?? (resetPage ? 1 : page);
     if (resetPage) setPage(1);
 
     try {
@@ -91,8 +91,9 @@ export default function DiscoverPage() {
   }
 
   function handleLoadMore() {
-    setPage((p) => p + 1);
-    fetchCharacters(false);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchCharacters(false, nextPage);
   }
 
   return (

@@ -24,7 +24,7 @@ export default function PricingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan: tierName.toLowerCase(),
+          planId: tierName.toLowerCase(),
           period: billingCycle === "yearly" ? "yearly" : "monthly",
         }),
       });

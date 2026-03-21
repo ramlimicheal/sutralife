@@ -31,20 +31,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const character = mockCharacters.find((c) => c.id === characterId);
-    if (!character) {
-      return NextResponse.json(
-        { error: "Character not found" },
-        { status: 404 }
-      );
-    }
-
     // Server-side access control: verify user session and profile
     let user: User | null = null;
     let nsfwEnabled = false;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     let responseCookies: CookieToSet[] = [];
+
+    // Look up character from DB first, then fall back to mock data
+    let character = mockCharacters.find((c) => c.id === characterId) ?? null;
 
     if (supabaseUrl && supabaseAnonKey) {
       const cookieStore = await cookies();
@@ -58,6 +53,17 @@ export async function POST(request: Request) {
           },
         },
       });
+
+      // Try to find character in database
+      const { data: dbCharacter } = await supabase
+        .from("characters")
+        .select("*")
+        .eq("id", characterId)
+        .single();
+
+      if (dbCharacter) {
+        character = dbCharacter;
+      }
 
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (authUser) {
@@ -87,6 +93,13 @@ export async function POST(request: Request) {
           nsfwEnabled = shouldShowNSFW(user);
         }
       }
+    }
+
+    if (!character) {
+      return NextResponse.json(
+        { error: "Character not found" },
+        { status: 404 }
+      );
     }
 
     // Check character access: NSFW gating + premium tier check
