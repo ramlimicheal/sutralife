@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #0e0e11;
+  --color-sidebar: #0A0A0D;
+  --color-surface: #141417;
+  --color-surface-high: #1A1A1E;
+  --color-surface-highest: #222226;
+  --color-border: #262628;
+  --color-border-subtle: #1E1E22;
+  --color-accent: #A8A8B8;
+  --color-accent-light: #D8D8E4;
+  --color-accent-dim: #808090;
+  --color-accent-surface: #2A2A34;
+  --color-muted: #64646E;
+  --color-text-primary: #F0EDF1;
+  --color-text-secondary: #8E8E96;
+  --color-text-tertiary: #5A5A62;
+  --color-coral: #ff8b9a;
+  --color-success: #34d399;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-label: "Manrope", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body {
+  background: #0e0e11;
+  color: #F0EDF1;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #F0F0F8 0%, #B0B0C0 50%, #D8D8E4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cta-gradient {
+  background: linear-gradient(135deg, #E8E8F0 0%, #C0C0CC 50%, #D8D8E4 100%);
+}
+
+.material-symbols-outlined {
+  font-size: 20px;
+  vertical-align: middle;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
