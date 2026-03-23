@@ -6,6 +6,7 @@ import Link from "next/link";
 import CharacterCard from "@/components/CharacterCard";
 import { mockCharacters, heroCharacter } from "@/lib/mock-data";
 import type { Character } from "@/types";
+import { NoiseBackground } from "@/components/ui/noise-background";
 
 const categories = ["All Personas", "Cyberpunk", "Historical", "Fantasy", "Slice of Life", "Supernatural"];
 const traits = ["Romantic", "Mysterious", "Aggressive", "Cheerful", "Loyal"];
@@ -118,12 +119,23 @@ export default function DiscoverPage() {
               Engage in deep, meaningful conversations with Akira, a high-intelligence AI designed to guide you through the digital sprawl.
             </p>
             <div className="flex gap-3">
-              <Link
-                href={`/chat/${heroCharacter.id}`}
-                className="px-6 py-2.5 cta-gradient text-bg font-semibold text-[13px] rounded-lg flex items-center gap-2 hover:opacity-90 active:scale-[0.97] transition-all shadow-lg shadow-accent/15"
+              <NoiseBackground
+                containerClassName="rounded-lg p-[2px]"
+                gradientColors={[
+                  "rgb(200, 200, 220)",
+                  "rgb(160, 160, 190)",
+                  "rgb(220, 220, 240)",
+                ]}
+                noiseIntensity={0.15}
+                speed={0.08}
               >
-                Start Chatting <span className="material-symbols-outlined text-[16px]">chat</span>
-              </Link>
+                <Link
+                  href={`/chat/${heroCharacter.id}`}
+                  className="px-6 py-2.5 bg-bg text-text-primary font-semibold text-[13px] rounded-[6px] flex items-center gap-2 hover:bg-surface active:scale-[0.97] transition-all shadow-[0px_1px_0px_0px_var(--color-surface-highest)_inset,0px_1px_0px_0px_var(--color-border)]"
+                >
+                  Start Chatting <span className="material-symbols-outlined text-[16px]">chat</span>
+                </Link>
+              </NoiseBackground>
               <Link
                 href={`/character/${heroCharacter.id}`}
                 className="px-6 py-2.5 bg-surface-high/60 backdrop-blur-md border border-border text-text-primary font-semibold text-[13px] rounded-lg hover:bg-surface-highest transition-all"

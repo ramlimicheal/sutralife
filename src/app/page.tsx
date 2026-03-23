@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { NoiseBackground } from "@/components/ui/noise-background";
 
 export default function AgeGate() {
   const router = useRouter();
@@ -60,13 +61,24 @@ export default function AgeGate() {
             </span>
           </label>
 
-          <button
-            onClick={handleEnter}
-            disabled={!confirmed}
-            className="w-full py-3 rounded-xl cta-gradient text-bg font-bold text-[14px] shadow-lg shadow-accent/15 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100"
+          <NoiseBackground
+            containerClassName={`w-full rounded-xl p-[2px] transition-opacity ${confirmed ? 'opacity-100' : 'opacity-30'}`}
+            gradientColors={[
+              "rgb(200, 200, 220)",
+              "rgb(160, 160, 190)",
+              "rgb(220, 220, 240)",
+            ]}
+            noiseIntensity={0.15}
+            speed={0.08}
           >
-            Enter Sanctuary
-          </button>
+            <button
+              onClick={handleEnter}
+              disabled={!confirmed}
+              className="w-full py-3 rounded-[10px] bg-bg text-text-primary font-bold text-[14px] shadow-[0px_1px_0px_0px_var(--color-surface-highest)_inset,0px_1px_0px_0px_var(--color-border)] hover:bg-surface transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100"
+            >
+              Enter Sanctuary
+            </button>
+          </NoiseBackground>
 
           <button
             onClick={() => setShowTerms(true)}
